@@ -1,0 +1,34 @@
+{
+    "name": "sbing/ali-oss",
+    "description": "The Laravel Framework.",
+    "keywords": [
+        "sbing",
+        "laravel",
+        "laravel Storage",
+        "laravel Filesystem",
+        "ali-oss"
+    ],
+    "authors": [
+        {
+            "name": "sbing",
+            "email": "676659348@qq.com"
+        }
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^7.2.5",
+        "aliyuncs/oss-sdk-php": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sbing\\AliOss\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sbing\\AliOss\\AliOssServiceProvider"
+            ]
+        }
+    }
+}
