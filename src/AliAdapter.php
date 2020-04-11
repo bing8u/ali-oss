@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use League\Flysystem\Adapter\AbstractAdapter;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
+use League\Flysystem\Util;
 use OSS\Core\OssException;
 use OSS\Model\ObjectInfo;
 use OSS\Model\PrefixInfo;
@@ -63,7 +64,10 @@ class AliAdapter extends AbstractAdapter
      */
     public function write($path, $contents, Config $config)
     {
-        $this->client->putObject($this->bucket, $path, $contents);
+        $this->client->putObject($this->bucket, $path, $contents, [
+            OssClient::OSS_CHECK_MD5 => true,
+            OssClient::OSS_CONTENT_TYPE => Util::guessMimeType($path, null)
+        ]);
 
         return true;
     }
@@ -83,9 +87,7 @@ class AliAdapter extends AbstractAdapter
      */
     public function update($path, $contents, Config $config)
     {
-        $this->client->putObject($this->bucket, $path, $contents);
-
-        return true;
+        return $this->write($path, $contents, $config);
     }
 
     /**
@@ -137,11 +139,11 @@ class AliAdapter extends AbstractAdapter
      */
     public function deleteDir($dirname)
     {
-        $files = $this->listContents($dirname, true);
+        $data = $this->listContents($dirname, true);
+
+        $files = Collection::make($data)->pluck('path')->toArray();
 
         $this->client->deleteObjects($this->bucket, $files);
-
-        $this->client->deleteObject($this->bucket, $dirname);
 
         return true;
     }
@@ -195,13 +197,9 @@ class AliAdapter extends AbstractAdapter
      */
     public function readStream($path)
     {
-        $this->client->getObject($this->bucket, $path, [
-            OssClient::OSS_FILE_DOWNLOAD => $location = uniqid()
-        ]);
+        $content = $this->client->getObject($this->bucket, $path);
 
-        $stream = fopen($location, 'rb');
-
-        return ['type' => 'file', 'path' => $path, 'stream' => $stream];
+        return ['type' => 'file', 'path' => $path, 'stream' => $content];
     }
 
     /**
